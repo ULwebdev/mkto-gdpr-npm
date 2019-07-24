@@ -1,0 +1,20 @@
+{
+  "name": "ul-marketo-countries-js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "marketo-countries.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ULwebdev/mkto-gdpr-npm.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ULwebdev/mkto-gdpr-npm/issues"
+  },
+  "homepage": "https://github.com/ULwebdev/mkto-gdpr-npm#readme"
+}
