@@ -3,4 +3,4 @@ CHANGELOG
 
 2019-07-24: Initial commit. Added JS code and Tests.
 
-2019-07-25: Made sure the JS was the same as the file in our Private Repo.
+2019-07-25: Updated the JS so it will work with multiple forms on one page.

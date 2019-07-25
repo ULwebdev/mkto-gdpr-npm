@@ -3,17 +3,13 @@
  * PURPOSE: 
  * 1) Change opt-in messages and to show/hide checkbox based on the country specified
  * 2) Strip Marketo default CSS and inline styles
- * VERSION: 1.0.0
- * PRIVATE REPO VERSION: 1.2.8
- * LAST UPDATED: June 26, 2019
+ * VERSION: 1.2.8
+ * LAST UPDATED: July 25, 2019
  * REQUIREMENTS: jQuery & MktoForms2
  */
 
 // Marketo GDPR object.
 var mkto_cnt = {};
-
-// if init() has run.
-mkto_cnt.init_ran = false;
 
 // errors with environment.
 mkto_cnt.env_error = 0;
@@ -107,80 +103,6 @@ mkto_cnt.find_in_array = function(needle, haystack){
   return false;
 };
 
-// Look for marketo forms on the page.
-mkto_cnt.mkto_forms_exist = function(){
-  "use strict";
-  var exists = false;
-  jQuery('form').each(function(){
-    if(typeof jQuery( this ).attr('id') !== 'undefined'){
-      if(jQuery(this).attr('id').indexOf('mktoForm_') !== -1){
-        exists = true;
-      }
-    }
-  });
-  return exists;
-};
-
-// Add classes that the JS can interact with:
-mkto_cnt.mkto_add_classes = function(){
-  "use strict";
-  // Create new label for="emailOptin" with needed class
-  var $label = jQuery("<label>").attr({
-    for:'emailOptin',
-    class: 'gdpr_mssg'
-  }).text('(Loading...)');
-  // Insert new label
-  jQuery('#emailOptin').after($label);
-  // Add class to form row
-  jQuery('#emailOptin').closest('.mktoFormRow').addClass('gdpr_wrap')
-  // add class for country input
-  jQuery('form select').each(function(){
-    if('Country' === jQuery(this).attr('id')){
-      jQuery(this).addClass('gdpr_select');
-    }
-  });
-};
-
-// Update the language of the messages:
-mkto_cnt.mkto_update_lang = function(){
-  "use strict";
-  var new_lang = false;
-
-  if(typeof window.optinlang !== 'undefined'){
-    new_lang = window.optinlang.replace("-", "_");
-  }
-  else if(typeof window.$language !== 'undefined'){
-    new_lang = window.$language.replace("-", "_");
-  }
-
-  if(new_lang){
-    switch(new_lang){
-      case 'pt':
-        new_lang = 'pt_br';
-        break;
-      case 'jp':
-        new_lang = 'ja';
-        break;
-      case 'zh_cn':
-        new_lang = 'zh_hans';
-        break;
-      case 'zh_hk':
-        new_lang = 'zh_hant';
-        break;
-    }
-  }
-
-  if(new_lang){
-    mkto_cnt.lang = new_lang;
-  }
-};
-
-// Updates the "loading" message:
-mkto_cnt.mkto_do_initial_mssg = function(){
-  "use strict";
-  jQuery('.gdpr_mssg').html(this.mssg[this.lang].doi);
-};
-
 // Fires each time a new country is selected:
 mkto_cnt.mkto_do_update = function(elem){
   "use strict";
@@ -206,6 +128,85 @@ mkto_cnt.mkto_do_update = function(elem){
   }
 };
 
+// If values are passed from Drupal to JS vars then hide the select menus:
+mkto_cnt.mkto_hide_menus = function(){
+  "use strict";
+  // if the ulmkto object exits and there is a form Id.
+  if(typeof ulmkto !== 'undefined' && "formId" in ulmkto) {
+  // req a demo form.
+  if("prodInterest" in ulmkto && ulmkto.prodInterest !== '') {
+    jQuery('#Product_Interest__c').closest('.mktoFormRow').removeClass('mktoFormRow').addClass('hidden');
+  }
+  // contact form.
+  else if ("division" in ulmkto && ulmkto.division !== '' && "subindustry" in ulmkto && ulmkto.subindustry !== '') {
+    jQuery('#po_division').closest('.mktoFormRow').removeClass('mktoFormRow').addClass('hidden');
+    jQuery('#po_subindustry_gos').closest('.mktoFormRow').removeClass('mktoFormRow').addClass('hidden');
+  }
+ }
+};
+
+// Updates the "loading" message:
+mkto_cnt.mkto_do_initial_mssg = function(){
+  "use strict";
+  jQuery('.gdpr_mssg').html(this.mssg[this.lang].doi);
+};
+
+// Update the language of the messages:
+mkto_cnt.mkto_update_lang = function(){
+  "use strict";
+  var new_lang = false;
+  if(typeof window.optinlang !== 'undefined'){
+    new_lang = window.optinlang.replace("-", "_");
+  }
+  else if(typeof window.$language !== 'undefined'){
+    new_lang = window.$language.replace("-", "_");
+  }
+  if(new_lang){
+    switch(new_lang){
+      case 'pt':
+        new_lang = 'pt_br';
+        break;
+      case 'jp':
+        new_lang = 'ja';
+        break;
+      case 'zh_cn':
+        new_lang = 'zh_hans';
+        break;
+      case 'zh_hk':
+        new_lang = 'zh_hant';
+        break;
+    }
+  }
+  if(new_lang){
+    mkto_cnt.lang = new_lang;
+  }
+};
+
+// Remove the initial Email Optin label and the loading div:
+mkto_cnt.mkto_gdpr_prep = function(){
+  "use strict";
+  jQuery('.mktoHtmlText div').each(function(){
+    if(jQuery( this ).attr('id') == 'optin-mssg'){
+      jQuery(this).closest('.mktoFormRow').remove();
+    }
+  });
+  jQuery('.mktoCheckboxWrap label').each(function(){
+    if(jQuery( this ).attr('for') == 'emailOptin'){
+      jQuery( this ).text('(Loading...)').addClass('gdpr_mssg');
+    }
+  });
+  jQuery('.mktoCheckboxWrap input').each(function(){
+    if(jQuery( this ).attr('id') == 'emailOptin'){
+      jQuery( this ).closest('.mktoFormRow').addClass('gdpr_wrap');
+    }
+  });
+  jQuery('.mktoFieldWrap select').each(function(){
+    if(jQuery(this).attr('id') == 'Country'){
+      jQuery(this).addClass('gdpr_select');
+    }
+  });
+};
+
 // Strip css styles from marketo forms:
 mkto_cnt.mkto_remove_styles = function(){
   "use strict";
@@ -225,33 +226,26 @@ mkto_cnt.mkto_remove_styles = function(){
   });
 };
 
-// remove the initial Email Optin label and the loading div
-mkto_cnt.mkto_gdpr_prep = function(){
-  "use strict";
-  jQuery('#optin-mssg').closest('.mktoFormRow').remove();
-  jQuery('.mktoForm label[for="emailOptin"]').remove();
-};
-
 // Process the forms:
 mkto_cnt.mkto_process = function(){
   "use strict";
+  // if the Marketo Forms API is ready:
   if(mkto_cnt.mktoForms2.hasOwnProperty('whenReady')){
     mkto_cnt.mktoForms2.whenReady(function(form){
       mkto_cnt.mkto_remove_styles();
       mkto_cnt.mkto_gdpr_prep();
-      mkto_cnt.mkto_add_classes();
       mkto_cnt.mkto_update_lang();
       mkto_cnt.mkto_do_initial_mssg();
+      mkto_cnt.mkto_hide_menus();
       jQuery('.gdpr_select').on('change', function(){
         mkto_cnt.mkto_do_update(jQuery(this));
       });
       jQuery('.mktoForm').on('change', 'input[type="radio"], input[type="checkbox"], select', function(){
-        setTimeout(mkto_cnt.mkto_remove_styles, 300);
+        setTimeout(mkto_cnt.mkto_remove_styles, 500);
       });
       if(jQuery('.mktoModal').length){
         jQuery('.mktoModal').addClass('is-visible');
       }
-      
       /*
       * https://css-tricks.com/snippets/jquery/done-resizing-event/
       * Author: Chris Coyier
@@ -264,64 +258,32 @@ mkto_cnt.mkto_process = function(){
         }, 300);
       });
     });
-  } else {
+  }
+  // Else, wait for the Marketo Forms API to be ready:
+  else {
     setTimeout(mkto_cnt.mkto_process, 2000);
   }
 };
 
-// Check environment:
-mkto_cnt.checkEnv = function(){
+// Look for marketo forms on the page.
+mkto_cnt.mkto_forms_exist = function(){
   "use strict";
-
-  // If this already ran:
-  if(mkto_cnt.init_ran){
-    mkto_cnt.stopEnvCheck();
-    return;
-  }
-
-  // if no jQuery
-  if(typeof window.jQuery === 'undefined'){
-    mkto_cnt.env_error += 1;
-  }
-
-  // if no MktoForms2 JS API
-  else if(typeof window.MktoForms2 === 'undefined'){
-    mkto_cnt.env_error += 1;
-  }
-
-  // If no errors, so call init():
-  if(mkto_cnt.env_error === 0){
-    mkto_cnt.stopEnvCheck();
-    mkto_cnt.init();
-  }
-};
-
-// Clear the interval, stop checking env:
-mkto_cnt.stopEnvCheck = function(){
-  "use strict";
-  clearInterval(mkto_cnt.begin);
-  delete mkto_cnt.checkEnv;
-  mkto_cnt.checkEnv = 'done';
-  if(mkto_cnt.init_ran){
-    delete mkto_cnt.init;
-    mkto_cnt.init = 'done';
-  }
+  var exists = false;
+  jQuery('form').each(function(){
+    if(typeof jQuery( this ).attr('id') !== 'undefined'){
+      if(jQuery(this).attr('id').indexOf('mktoForm_') !== -1){
+        exists = true;
+      }
+    }
+  });
+  return exists;
 };
 
 // Check the environment and look for marketo forms:
 mkto_cnt.init = function(){
   "use strict";
-
-  // If this already ran:
-  if(mkto_cnt.init_ran){
-    mkto_cnt.stopEnvCheck();
-    return;
-  } else {
-    mkto_cnt.init_ran = true;
-  }
-
+  // Assign the Marketo JS API to our object
   mkto_cnt.mktoForms2 = window.MktoForms2;
-
   // If marketo forms exist:
   if(mkto_cnt.mkto_forms_exist()){
     mkto_cnt.mkto_process();
@@ -330,7 +292,31 @@ mkto_cnt.init = function(){
   else {
     return false;
   }
-}; // init()
+};
+
+// Check environment:
+mkto_cnt.checkEnv = function(){
+  "use strict";
+  // if no jQuery:
+  if(typeof window.jQuery === 'undefined'){
+    mkto_cnt.env_error += 1;
+  }
+  // if no MktoForms2 JS API:
+  if(typeof window.MktoForms2 === 'undefined'){
+    mkto_cnt.env_error += 1;
+  }
+  // If no errors, so call init():
+  if(mkto_cnt.env_error === 0){
+    mkto_cnt.stopEnvCheck();
+    mkto_cnt.init();
+  }
+};
+
+// Stop checking env by clearing the interval:
+mkto_cnt.stopEnvCheck = function(){
+  "use strict";
+  clearInterval(mkto_cnt.begin);
+};
 
 // Begin by checking the Environment for jQuery & MktoForms2
 mkto_cnt.begin = setInterval(mkto_cnt.checkEnv, 2000);
